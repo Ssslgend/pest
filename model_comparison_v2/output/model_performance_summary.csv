@@ -1,0 +1,4 @@
+﻿Model,Parameters(M),Total Epochs,Best Val AUC,Best AUC Epoch,Best Val Loss,Best Loss Epoch,Final Val AUC,Final Val Loss
+BiLSTM,1.5,13,0.9625,13,0.6211,13,0.9625,0.6211
+LSTM,0.5,24,0.875,14,0.0369,11,0.8438,0.4747
+MLP,0.1,30,0.7532,15,0.5558,30,0.7532,0.5558

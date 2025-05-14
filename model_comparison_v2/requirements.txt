@@ -1,0 +1,1 @@
+pandas>=1.0.0\nmatplotlib>=3.2.0\nseaborn>=0.11.0\nnumpy>=1.18.0 
