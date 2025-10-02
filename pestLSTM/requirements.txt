@@ -1,8 +1,0 @@
-torch
-rasterio
-numpy
-joblib
-tqdm
-pandas
-scikit-learn
-matplotlib 

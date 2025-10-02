@@ -1,0 +1,181 @@
+# 美国白蛾防治预测系统项目文档
+
+## 1. 项目概述
+
+本项目是一个基于深度学习的美国白蛾（Fall Webworm）发生预测系统，使用双向LSTM（BiLSTM）模型结合注意力机制来预测害虫发生的概率。项目收集了2019-2024年间的美国白蛾发生点数据，结合地理信息和气象数据，构建预测模型。
+
+## 2. 项目结构
+
+```
+/
+├── model/                         # 模型定义
+│   ├── bilstm.py                  # BiLSTM模型实现
+│   └── __init__.py
+├── utils/                         # 工具函数
+│   ├── metrics.py                 # 评估指标实现
+│   └── __init__.py
+├── scripts/                       # 数据处理脚本
+│   └── fill_missing.py            # 填充缺失值脚本
+├── data/                          # 处理后的数据
+├── datas/                         # 原始数据
+├── results/                       # 模型结果保存
+├── sd_raster_prediction/          # 栅格预测相关
+├── sd.py                          # 空间数据处理
+├── sd_gis.py                      # GIS数据处理
+├── precess.py                     # 数据预处理主脚本
+├── requirements.txt               # 依赖库
+└── best_model.pth                 # 最佳模型保存
+```
+
+## 3. 数据处理（precess.py）
+
+### 3.1 主要参数
+
+| 参数名 | 类型 | 描述 |
+|--------|------|------|
+| AMAP_KEY | str | 高德地图API密钥，用于地理编码 |
+| GEOCONVERT_API_URL | str | 高德地图地理编码API端点 |
+| SPECIES_NAME | str | 害虫名称，设为"美国白蛾" |
+| OUTPUT_CSV_FILE | str | 输出CSV文件名 |
+| DELAY_BETWEEN_REQUESTS | float | API请求之间的延迟时间（秒） |
+| location_list_2024 | list | 2024年发生点地区列表 |
+
+### 3.2 主要函数
+
+#### geocode_location(address, api_key)
+- **功能**: 将地址转换为经纬度坐标
+- **参数**: 
+  - address: 地址字符串
+  - api_key: 高德地图API密钥
+- **返回值**: 包含经纬度的字典，如 {'latitude': xx, 'longitude': yy}
+
+#### main()
+- **功能**: 主函数，处理所有位置数据并保存结果
+- **工作流程**:
+  1. 初始化计数器和结果列表
+  2. 遍历地点列表，调用geocode_location获取经纬度
+  3. 将结果写入CSV文件
+  4. 打印处理统计信息
+
+## 4. 空间数据处理（sd.py）
+
+### 4.1 SpatialDataProcessor类
+
+#### 初始化参数
+| 参数名 | 类型 | 描述 |
+|--------|------|------|
+| data_path | str | 数据文件路径 |
+| feature_columns | list | 特征列名列表，包括温度、湿度、降雨量等气象因子 |
+| label_column | str | 标签列名，默认为'Value_Class' |
+| coordinate_columns | list | 坐标列名列表，默认为['latitude', 'longitude'] |
+| scaler | object | 特征标准化处理器 |
+
+#### 主要方法
+
+##### load_data()
+- **功能**: 加载数据并划分训练、验证和测试集
+- **返回值**: 包含训练、验证和测试数据的字典，每个子集包含特征（X）、标签（y）和坐标信息
+
+##### create_dataloaders(data_dict, batch_size=32)
+- **功能**: 创建PyTorch数据加载器
+- **参数**:
+  - data_dict: 由load_data()返回的数据字典
+  - batch_size: 批次大小，默认32
+- **返回值**: 训练、验证和测试数据加载器元组
+
+### 4.2 SpatialDataset类（嵌套在create_dataloaders方法中）
+
+- **功能**: 自定义PyTorch数据集，处理空间数据
+- **参数**:
+  - X: 特征数据
+  - y: 标签数据
+  - coordinates: 坐标数据
+- **方法**:
+  - __len__(): 返回数据集长度
+  - __getitem__(idx): 返回指定索引的样本
+
+## 5. BiLSTM模型（model/bilstm.py）
+
+### 5.1 AttentionLayer类
+
+- **功能**: 实现注意力机制，捕获序列中重要信息
+- **参数**:
+  - hidden_size: 隐藏层大小
+- **主要方法**:
+  - forward(lstm_output): 计算注意力权重并返回上下文向量
+
+### 5.2 ResidualBlock类
+
+- **功能**: 实现残差连接，缓解梯度消失问题
+- **参数**:
+  - hidden_size: 隐藏层大小
+  - dropout: Dropout比率，默认0.2
+- **主要方法**:
+  - forward(lstm_out): 应用残差连接并返回处理后的输出
+
+### 5.3 BiLSTMModel类
+
+- **功能**: 实现双向LSTM模型，包含注意力机制和残差连接
+- **参数**:
+  - config: 配置字典，包含以下键：
+    - input_size: 输入特征维度
+    - hidden_size: LSTM隐藏层大小
+    - num_layers: LSTM层数
+    - dropout: Dropout比率
+    - num_classes: 输出类别数（可选）
+  - output_size: 输出维度（可选，优先于config中的num_classes）
+- **主要方法**:
+  - _init_weights(): 初始化模型权重
+  - forward(x): 前向传播，返回模型输出
+
+### 5.4 模型架构细节
+
+1. 使用双向LSTM捕获序列信息
+2. 应用注意力机制聚焦关键时间步
+3. 使用残差连接缓解梯度消失问题
+4. 应用批归一化提高训练稳定性
+5. 多层全连接网络处理特征并输出预测
+
+## 6. 数据填充脚本（scripts/fill_missing.py）
+
+- **功能**: 处理数据集中的缺失值
+- **处理流程**:
+  1. 读取CSV文件（尝试不同编码）
+  2. 将'Pestvalue'列中的空值替换为0
+  3. 保存处理后的文件
+  4. 打印处理统计信息
+
+## 7. 依赖库
+
+```
+torch>=1.7.0
+numpy>=1.19.0
+pandas>=1.1.0
+scikit-learn>=0.23.0
+```
+
+## 8. 使用指南
+
+1. 数据预处理:
+   - 运行 `python precess.py` 处理原始地理位置数据
+   - 运行 `python scripts/fill_missing.py` 处理缺失值
+
+2. 模型训练:
+   - 准备好处理后的数据
+   - 配置合适的模型参数
+   - 调用 `sd.py` 中的 `SpatialDataProcessor` 类加载和处理数据
+   - 实例化 `model/bilstm.py` 中的 `BiLSTMModel` 类
+   - 使用标准PyTorch训练循环训练模型
+
+3. 预测应用:
+   - 加载保存的最佳模型 `best_model.pth`
+   - 准备新的输入数据
+   - 使用模型进行预测
+   - 结合GIS系统可视化预测结果
+
+## 9. 注意事项
+
+1. 使用前请确保更换 `precess.py` 中的 `AMAP_KEY` 为您自己的高德地图API密钥
+2. 数据预处理时注意原始数据的编码格式
+3. 模型训练时推荐使用GPU加速
+4. 批量大小和学习率可能需要根据实际数据规模进行调整 

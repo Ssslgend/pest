@@ -1,0 +1,28 @@
+﻿Feature,Importance_AUC_Drop
+EVI,0.15378917378917378
+Max Temperature of Warmest Month,0.09013105413105416
+lai,0.07354985754985766
+Precipitation of Driest Month,0.0558974358974359
+lst,0.04715669515669518
+Precipitation Seasonality (Coefficient of Variation),0.043487179487179506
+Isothermality (BIO2/BIO7) (×100),0.03410826210826212
+Temperature Seasonality (standard deviation ×100),0.020478632478632575
+NDVI,0.019282051282051293
+PET,0.01687749287749285
+Mean Temperature of Warmest Quarter,0.01139601139601154
+Temperature Annual Range (BIO5-BIO6),0.010415954415954443
+Min Temperature of Coldest Month,0.00746438746438749
+Precipitation of Coldest Quarter,0.007384615384615434
+Mean Diurnal Range (Mean of monthly (max temp - min temp)),0.0064615384615385185
+Annual Mean Temperature,0.005333333333333412
+sd_poxiang.1,0.00452421652421664
+Precipitation of Warmest Quarter,0.004341880341880433
+sd_dem,0.00393162393162394
+Annual Precipitation,0.002951566951567064
+Precipitation of Driest Quarter,0.00248433048433061
+Precipitation of Wettest Quarter,0.00248433048433061
+sd_podu,0.0024273504273505386
+Mean Temperature of Coldest Quarter,0.002062678062678125
+sd_poxiang,0.0013675213675213849
+Precipitation of Wettest Month,0.0005470085470085095
+Mean Temperature of Driest Quarter,6.837606837606369e-05

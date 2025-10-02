@@ -7,7 +7,7 @@ from torch.utils.data import Dataset, DataLoader
 import torch
 import os
 import joblib
-from config_raster import get_config # Import from config file
+from sd_raster_prediction.config_raster import get_config # Import from config file
 
 # Load config
 CONFIG = get_config()
@@ -98,7 +98,7 @@ class RasterPredictionDataProcessor:
         pseudo_coords_x = pseudo_coords[:, 0]
         pseudo_coords_y = pseudo_coords[:, 1]
 
-        # 为伪阴性点生成特征
+        # 为伪阴性点生成特征 ！！！！error
         pseudo_features = {}
         for col in self.feature_columns:
             # 获取阳性点的特征分布
